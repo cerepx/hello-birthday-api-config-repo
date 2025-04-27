@@ -1,0 +1,109 @@
+name: Terraform Plan on PR
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.0"
+
+      - name: Install TFLint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: Install tfsec
+        run: |
+          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+
+      - name: Generate tfvars from SSM Parameter Store
+        run: |
+          echo "Fetching terraform-variables from SSM..."
+
+          # Default
+          ENVIRONMENT="dev"
+
+          if [[ "${GITHUB_HEAD_REF}" == "release" || "${GITHUB_REF}" == "refs/heads/release" ]]; then
+            ENVIRONMENT="prod"
+          fi
+
+          PARAMETER_NAME="/hello-birthday-api/$ENVIRONMENT/terraform-variables"
+          terraform_vars_json=$(aws ssm get-parameter --name "$PARAMETER_NAME" --query "Parameter.Value" --output text)
+          echo "$terraform_vars_json" > "${ENVIRONMENT}.tfvars.json"
+
+        working-directory: terraform
+
+      - name: Terraform Init
+        run: |
+          if [[ ${{ github.head_ref }} == "ci/add-terraform-workflows" ]]; then
+            terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
+          elif [[ ${{ github.head_ref }} == "release" ]]; then
+            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
+          fi
+        working-directory: terraform
+
+      - name: Terraform Fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Run TFLint
+        run: |
+          tflint --init
+          tflint --call-module-type=all
+
+      - name: Run tfsec (Security Checks)
+        run: tfsec .
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          if [[ ${{ github.head_ref }} == "ci/add-terraform-workflows" ]]; then
+            terraform plan -no-color -var-file=dev.tfvars.json -out=tfplan | tee plan.txt
+          elif [[ ${{ github.head_ref }} == "release" ]]; then
+            terraform plan -var-file=prod.tfvars.json -out=tfplan | tee plan.txt
+          fi
+        working-directory: terraform
+
+      - name: Upload Terraform Plan (binary)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.sha }}
+          path: terraform/tfplan
+          retention-days: 7
+
+      - name: Upload Plan Summary (text)
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-summary-${{ github.sha }}
+          path: terraform/plan.txt
+          retention-days: 7
+
+      - name: Comment Terraform Plan on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan
+          path: terraform/plan.txt

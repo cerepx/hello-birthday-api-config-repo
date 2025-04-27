@@ -1,0 +1,65 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+      - release
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.0"
+
+      - name: Terraform Init
+        run: |
+          if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
+            terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
+          elif [[ ${{ github.ref }} == "refs/heads/release" ]]; then
+            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
+          fi
+        working-directory: terraform
+
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ github.sha }}
+          path: .
+
+      - name: Verify tfplan exists
+        run: |
+          if [ ! -f tfplan ]; then
+            echo "::error ::Terraform plan file (tfplan) missing. Aborting apply."
+            exit 1
+          else
+            echo "Terraform plan file (tfplan) found. Proceeding."
+          fi
+
+      - name: Announce Plan Being Applied
+        run: |
+          echo "Terraform plan (artifact: tfplan-${GITHUB_SHA}) has been downloaded locally as tfplan."
+          echo "Proceeding to apply it now..."
+
+      - name: Terraform Apply
+        run: |
+            terraform apply -auto-approve tfplan
+            echo "::notice :: Terraform apply completed successfully for plan tfplan-${GITHUB_SHA}"
+        working-directory: terraform
