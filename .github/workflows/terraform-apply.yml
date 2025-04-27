@@ -46,6 +46,10 @@ jobs:
           elif [[ ${{ github.ref }} == "refs/heads/release" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
           fi
+          else
+            echo "Unsupported branch for apply"
+            exit 1
+          fi
         working-directory: terraform
 
       - name: Download plan metadata
