@@ -58,7 +58,7 @@ jobs:
 
       - name: Terraform Init
         run: |
-          if [[ ${{ github.head_ref }} == "ci/add-terraform-workflows" ]]; then
+          if [[ ${{ github.head_ref }} == "main" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
           elif [[ ${{ github.head_ref }} == "release" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-prod.hcl

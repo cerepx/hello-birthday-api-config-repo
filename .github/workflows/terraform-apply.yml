@@ -56,11 +56,11 @@ jobs:
         run: |
           PLAN_FILE=$(cat plan-filename.txt)
           echo "PLAN_FILE=$PLAN_FILE" >> $GITHUB_ENV
-          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/$PLAN_FILE.tfplan tfplan
+          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/$PLAN_FILE.tfplan terraform/tfplan
 
       - name: Verify tfplan exists
         run: |
-          if [ ! -f tfplan ]; then
+          if [ ! -f terraform/tfplan ]; then
             echo "::error ::Terraform plan file (tfplan) missing. Aborting apply."
             exit 1
           else
@@ -74,7 +74,6 @@ jobs:
 
       - name: Terraform Apply
         run: |
-            ls -l tfplan
             terraform apply -auto-approve tfplan
             echo "::notice :: Terraform apply completed successfully for plan $PLAN_FILE.tfplan"
         working-directory: terraform
