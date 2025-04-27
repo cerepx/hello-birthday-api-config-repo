@@ -58,10 +58,13 @@ jobs:
 
       - name: Terraform Init
         run: |
-          if [[ ${{ github.head_ref }} == "ci/add-terraform-workflows" ]]; then
+          if [[ "${{ github.base_ref }}" == "main" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
-          elif [[ ${{ github.head_ref }} == "release" ]]; then
+          elif [[ "${{ github.base_ref }}" == "release" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
+          else
+            echo "Unsupported target branch for plan"
+            exit 1
           fi
         working-directory: terraform
 
@@ -82,9 +85,9 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
-          if [[ ${{ github.head_ref }} == "ci/add-terraform-workflows" ]]; then
+          if [[ "${{ github.base_ref }}" == "main" ]]; then
             terraform plan -no-color -var-file=dev.tfvars.json -out=tfplan | tee plan.txt
-          elif [[ ${{ github.head_ref }} == "release" ]]; then
+          elif [[ ${{ github.base_ref }} == "release" ]]; then
             terraform plan -var-file=prod.tfvars.json -out=tfplan | tee plan.txt
           fi
         working-directory: terraform

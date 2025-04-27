@@ -45,6 +45,9 @@ jobs:
             terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
           elif [[ ${{ github.ref }} == "refs/heads/release" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
+          else
+            echo "Unsupported branch for apply"
+            exit 1
           fi
         working-directory: terraform
 
@@ -56,11 +59,11 @@ jobs:
         run: |
           PLAN_FILE=$(cat plan-filename.txt)
           echo "PLAN_FILE=$PLAN_FILE" >> $GITHUB_ENV
-          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/$PLAN_FILE.tfplan tfplan
+          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/$PLAN_FILE.tfplan terraform/tfplan
 
       - name: Verify tfplan exists
         run: |
-          if [ ! -f tfplan ]; then
+          if [ ! -f terraform/tfplan ]; then
             echo "::error ::Terraform plan file (tfplan) missing. Aborting apply."
             exit 1
           else
