@@ -102,6 +102,10 @@ jobs:
           path: terraform/plan.txt
           retention-days: 7
 
+      - name: Upload tfplan to S3
+        run: |
+          aws s3 cp terraform/tfplan s3://hello-birthday-api-tfstate/tfplans/${{ github.sha }}.tfplan
+
       - name: Comment Terraform Plan on PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
