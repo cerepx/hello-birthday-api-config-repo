@@ -98,3 +98,29 @@ resource "aws_flow_log" "vpc_flow_logs" {
   log_destination_type = "cloud-watch-logs"
   traffic_type         = "ALL"
 }
+
+resource "aws_security_group" "rds" {
+  name        = "${var.name}-rds-sg"
+  description = "Allow MySQL access from VPC private subnets only"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "MySQL from private subnets"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = var.private_subnet_cidrs
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.name}-rds-sg"
+    Environment = var.env
+  }
+}
