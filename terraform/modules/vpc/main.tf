@@ -5,6 +5,7 @@ resource "aws_vpc" "this" {
 
   tags = {
     Name = "${var.name}-vpc"
+    Environment = var.env
   }
 }
 
@@ -13,31 +14,34 @@ resource "aws_internet_gateway" "this" {
 
   tags = {
     Name = "${var.name}-igw"
+    Environment = var.env
   }
 }
 
 # Public Subnets
 resource "aws_subnet" "public" {
-  count                   = 2
+  count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.this.id
   cidr_block              = var.public_subnet_cidrs[count.index]
+  availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = true
-  availability_zone       = element(var.availability_zones, count.index)
 
   tags = {
     Name = "${var.name}-public-subnet-${count.index + 1}"
+    Environment = var.env
   }
 }
 
 # Private Subnets
 resource "aws_subnet" "private" {
-  count             = 2
+  count             = length(var.private_subnet_cidrs)
   vpc_id            = aws_vpc.this.id
   cidr_block        = var.private_subnet_cidrs[count.index]
-  availability_zone = element(var.availability_zones, count.index)
+  availability_zone = var.availability_zones[count.index]
 
   tags = {
     Name = "${var.name}-private-subnet-${count.index + 1}"
+    Environment = var.env
   }
 }
 
@@ -47,35 +51,37 @@ resource "aws_route_table" "public" {
 
   tags = {
     Name = "${var.name}-public-rt"
+    Environment = var.env
   }
 }
 
-# Public Route to Internet Gateway
-resource "aws_route" "public_internet_access" {
+# Public Internet Route
+resource "aws_route" "default_internet_access" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.this.id
 }
 
-# Associate Public Subnets with Public Route Table
+# Associate all Public Subnets to Public Route Table
 resource "aws_route_table_association" "public" {
-  count          = 2
+  count          = length(var.public_subnet_cidrs)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-# Private Route Table (no NAT, no IGW)
+# Private Route Table
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.this.id
 
   tags = {
     Name = "${var.name}-private-rt"
+    Environment = var.env
   }
 }
 
-# Associate Private Subnets with Private Route Table
+# Associate all Private Subnets to Private Route Table
 resource "aws_route_table_association" "private" {
-  count          = 2
+  count          = length(var.private_subnet_cidrs)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }
