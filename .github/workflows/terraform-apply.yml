@@ -3,7 +3,7 @@ name: Terraform Apply
 on:
   push:
     branches:
-      - ci/add-terraform-workflows
+      - main
       - release
 
 permissions:
@@ -41,7 +41,7 @@ jobs:
 
       - name: Terraform Init
         run: |
-          if [[ ${{ github.head_ref }} == "ci/add-terraform-workflows" ]]; then
+          if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
           elif [[ ${{ github.ref }} == "refs/heads/release" ]]; then
             terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
@@ -74,7 +74,7 @@ jobs:
 
       - name: Terraform Apply
         run: |
-            ls -l
+            ls -l tfplan
             terraform apply -auto-approve tfplan
             echo "::notice :: Terraform apply completed successfully for plan $PLAN_FILE.tfplan"
         working-directory: terraform
