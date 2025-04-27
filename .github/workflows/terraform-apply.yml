@@ -38,11 +38,9 @@ jobs:
           fi
         working-directory: terraform
 
-      - name: Download Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-${{ github.sha }}
-          path: .
+      - name: Download tfplan from S3
+        run: |
+          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/${{ github.sha }}.tfplan tfplan
 
       - name: Verify tfplan exists
         run: |
