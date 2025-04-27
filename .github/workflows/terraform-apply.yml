@@ -29,18 +29,34 @@ jobs:
         with:
           terraform_version: "1.11.0"
 
+      - name: Identify the environment
+        run: |
+            # Default
+            ENVIRONMENT="dev"
+
+            if [[ "${GITHUB_HEAD_REF}" == "release" || "${GITHUB_REF}" == "refs/heads/release" ]]; then
+              ENVIRONMENT="prod"
+            fi
+            echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+
       - name: Terraform Init
         run: |
           if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
-            terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
+            terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
           elif [[ ${{ github.ref }} == "refs/heads/release" ]]; then
-            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
+            terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
           fi
         working-directory: terraform
 
-      - name: Download tfplan from S3
+      - name: Download plan metadata
         run: |
-          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/${{ github.sha }}.tfplan tfplan
+          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/plan-filename.txt plan-filename.txt
+
+      - name: Download the Terraform plan
+        run: |
+          PLAN_FILE=$(cat plan-filename.txt)
+          echo "PLAN_FILE=$PLAN_FILE" >> $GITHUB_ENV
+          aws s3 cp s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/$PLAN_FILE.tfplan tfplan
 
       - name: Verify tfplan exists
         run: |
@@ -53,11 +69,11 @@ jobs:
 
       - name: Announce Plan Being Applied
         run: |
-          echo "Terraform plan (artifact: tfplan-${GITHUB_SHA}) has been downloaded locally as tfplan."
+          echo "Terraform plan (artifact: $PLAN_FILE.tfplan) has been downloaded locally as tfplan."
           echo "Proceeding to apply it now..."
 
       - name: Terraform Apply
         run: |
             terraform apply -auto-approve tfplan
-            echo "::notice :: Terraform apply completed successfully for plan tfplan-${GITHUB_SHA}"
+            echo "::notice :: Terraform apply completed successfully for plan $PLAN_FILE.tfplan"
         working-directory: terraform

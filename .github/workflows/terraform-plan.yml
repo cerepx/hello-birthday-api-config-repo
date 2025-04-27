@@ -48,6 +48,7 @@ jobs:
           if [[ "${GITHUB_HEAD_REF}" == "release" || "${GITHUB_REF}" == "refs/heads/release" ]]; then
             ENVIRONMENT="prod"
           fi
+          echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
 
           PARAMETER_NAME="/hello-birthday-api/$ENVIRONMENT/terraform-variables"
           terraform_vars_json=$(aws ssm get-parameter --name "$PARAMETER_NAME" --query "Parameter.Value" --output text)
@@ -88,23 +89,14 @@ jobs:
           fi
         working-directory: terraform
 
-      - name: Upload Terraform Plan (binary)
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-${{ github.sha }}
-          path: terraform/tfplan
-          retention-days: 7
-
-      - name: Upload Plan Summary (text)
-        uses: actions/upload-artifact@v4
-        with:
-          name: plan-summary-${{ github.sha }}
-          path: terraform/plan.txt
-          retention-days: 7
-
-      - name: Upload tfplan to S3
+      - name: Set Plan File Name
         run: |
-          aws s3 cp terraform/tfplan s3://hello-birthday-api-tfstate/tfplans/${{ github.sha }}.tfplan
+          echo "${{ github.sha }}" > plan-filename.txt
+
+      - name: Upload tfplan and plan-filename.txt to S3
+        run: |
+          aws s3 cp terraform/tfplan s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/${{ github.sha }}.tfplan
+          aws s3 cp plan-filename.txt s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/plan-filename.txt
 
       - name: Comment Terraform Plan on PR
         uses: marocchino/sticky-pull-request-comment@v2
