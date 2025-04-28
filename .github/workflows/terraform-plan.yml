@@ -80,7 +80,7 @@ jobs:
           tflint --init
           tflint --call-module-type=all
 
-      - name: Run tfsec (Security Checks) #disabled some tfsec tests for DEV
+      - name: Run tfsec for DEV (Security Checks) #disabled some tfsec tests for DEV
         run: tfsec --config-file terraform/envs/dev/.tfsec.yaml terraform/envs/dev/
 
       - name: Run tfsec for Prod
