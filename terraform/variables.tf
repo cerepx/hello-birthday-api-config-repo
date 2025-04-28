@@ -35,11 +35,6 @@ variable "availability_zones" {
   type        = list(string)
 }
 
-variable "flow_logs_retention_days" {
-  description = "Retention period for VPC Flow Logs in CloudWatch Logs (in days)"
-  type        = number
-}
-
 variable "name_prefix" {
   description = "Prefix for resource names"
   type        = string

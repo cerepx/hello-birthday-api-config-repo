@@ -21,8 +21,6 @@ availability_zones = [
   "us-east-1c"
 ]
 
-flow_logs_retention_days = 365
-
 name_prefix             = "hello-birthday-prd"
 env                    = "prod"
 engine                 = "mysql"

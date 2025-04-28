@@ -113,14 +113,15 @@ resource "aws_security_group" "rds" {
   }
 
   egress {
+    description = "Allow all outbound traffic within VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
-    Name = "${var.name}-rds-sg"
+    Name        = "${var.name}-rds-sg"
     Environment = var.env
   }
 }

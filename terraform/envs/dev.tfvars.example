@@ -18,8 +18,6 @@ availability_zones = [
   "us-east-1b"
 ]
 
-flow_logs_retention_days = 30
-
 name_prefix             = "hello-birthday-dev"
 engine                 = "mysql"
 instance_class         = "db.t3.micro"
