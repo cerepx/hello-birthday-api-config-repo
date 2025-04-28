@@ -13,8 +13,8 @@ resource "aws_ecs_task_definition" "this" {
       image = var.container_image
       portMappings = [
         {
-          containerPort = 5050
-          hostPort      = 5050
+          containerPort = 5000
+          hostPort      = 5000
           protocol      = "tcp"
         }
       ]
@@ -67,7 +67,7 @@ resource "aws_ecs_service" "this" {
   load_balancer {
     target_group_arn = var.target_group_arn
     container_name   = var.container_name
-    container_port   = 5050
+    container_port   = 5000
   }
 
   task_definition = aws_ecs_task_definition.this.arn

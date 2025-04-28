@@ -185,8 +185,8 @@ resource "aws_security_group" "ecs" {
 
   ingress {
     description = "HTTP from ALB"
-    from_port   = 5050
-    to_port     = 5050
+    from_port   = 5000
+    to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
   }
