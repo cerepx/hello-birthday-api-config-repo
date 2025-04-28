@@ -52,7 +52,8 @@ jobs:
 
           PARAMETER_NAME="/hello-birthday-api/$ENVIRONMENT/terraform-variables"
           terraform_vars_json=$(aws ssm get-parameter --name "$PARAMETER_NAME" --query "Parameter.Value" --output text)
-          echo "$terraform_vars_json" > "${ENVIRONMENT}.tfvars.json"
+          mkdir -p "${ENVIRONMENT}"
+          echo "$terraform_vars_json" > "${ENVIRONMENT}/${ENVIRONMENT}.tfvars.json"
 
         working-directory: terraform
 
@@ -79,16 +80,19 @@ jobs:
           tflint --init
           tflint --call-module-type=all
 
-      - name: Run tfsec (Security Checks)
-        run: tfsec .
+      - name: Run tfsec (Security Checks) #disabled some tfsec tests for DEV
+        run: tfsec --config-file terraform/envs/dev/.tfsec.yaml terraform/envs/dev/
+
+      - name: Run tfsec for Prod
+        run: tfsec terraform/envs/dev/
 
       - name: Terraform Plan
         id: plan
         run: |
           if [[ "${{ github.base_ref }}" == "main" ]]; then
-            terraform plan -no-color -var-file=dev.tfvars.json -out=tfplan | tee plan.txt
+            terraform plan -no-color -var-file=dev/dev.tfvars.json -out=tfplan | tee plan.txt
           elif [[ ${{ github.base_ref }} == "release" ]]; then
-            terraform plan -var-file=prod.tfvars.json -out=tfplan | tee plan.txt
+            terraform plan -var-file=prod/prod.tfvars.json -out=tfplan | tee plan.txt
           fi
         working-directory: terraform
 

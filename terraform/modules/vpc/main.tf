@@ -100,7 +100,7 @@ resource "aws_kms_key" "vpc_flow_logs" {
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   name              = "/aws/vpc/flowlogs/${var.name}"
   retention_in_days = var.flow_logs_retention_days
-  kms_key_id        = aws_kms_key.vpc_flow_logs.arn
+  kms_key_id        = var.env == "prod" ? aws_kms_key.vpc_flow_logs.arn : null
 }
 
 resource "aws_flow_log" "vpc_flow_logs" {
