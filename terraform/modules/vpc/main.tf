@@ -86,10 +86,21 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
+resource "aws_kms_key" "vpc_flow_logs" {
+  description             = "KMS key for VPC Flow Logs encryption"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  tags = {
+    Name        = "${var.name}-flow-logs-kms"
+    Environment = var.env
+  }
+}
+
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   name              = "/aws/vpc/flowlogs/${var.name}"
   retention_in_days = var.flow_logs_retention_days
-  kms_key_id        = "alias/aws/logs"
+  kms_key_id        = aws_kms_key.vpc_flow_logs.arn
 }
 
 resource "aws_flow_log" "vpc_flow_logs" {
@@ -97,4 +108,31 @@ resource "aws_flow_log" "vpc_flow_logs" {
   log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
   log_destination_type = "cloud-watch-logs"
   traffic_type         = "ALL"
+}
+
+resource "aws_security_group" "rds" {
+  name        = "${var.name}-rds-sg"
+  description = "Allow MySQL access from VPC private subnets only"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "MySQL from private subnets"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = var.private_subnet_cidrs
+  }
+
+  egress {
+    description = "Allow all outbound traffic within VPC"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  tags = {
+    Name        = "${var.name}-rds-sg"
+    Environment = var.env
+  }
 }

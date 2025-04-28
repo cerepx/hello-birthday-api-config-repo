@@ -34,3 +34,35 @@ variable "availability_zones" {
   description = "List of availability zones to use"
   type        = list(string)
 }
+
+variable "name_prefix" {
+  description = "Prefix for resource names"
+  type        = string
+}
+
+
+variable "engine" {
+  description = "Database engine type"
+  type        = string
+  default     = "mysql"
+}
+
+variable "instance_class" {
+  description = "RDS instance type"
+  type        = string
+}
+
+variable "allocated_storage" {
+  description = "RDS allocated storage size"
+  type        = number
+}
+
+variable "username" {
+  description = "Master username for RDS"
+  type        = string
+}
+
+variable "password" {
+  description = "Master password for RDS"
+  type        = string
+}
