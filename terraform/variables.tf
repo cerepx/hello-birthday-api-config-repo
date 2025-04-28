@@ -92,3 +92,16 @@ variable "gunicorn_workers" {
   description = "Define GUNICORN_WORKERS environment variable"
   type        = string
 }
+
+# API Gateway config variables
+variable "api_name" {
+  description = "Name for the API Gateway"
+  type        = string
+  default     = "hello-birthday-api-gateway"
+}
+
+variable "vpc_link_name" {
+  description = "Name for VPC Link to connect API Gateway to ALB"
+  type        = string
+  default     = "hello-birthday-vpc-link"
+}

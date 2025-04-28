@@ -62,3 +62,13 @@ module "ecs_service" {
   security_groups  = [module.vpc.ecs_security_group_id]
   target_group_arn = module.alb.target_group_arn
 }
+
+module "api_gateway" {
+  source = "./modules/api_gateway"
+
+  api_name               = var.api_name
+  vpc_link_name          = var.vpc_link_name
+  alb_dns_name           = "http://${module.alb.alb_dns_name}"
+  subnet_ids             = module.vpc.private_subnet_ids
+  alb_security_group_ids = [module.vpc.alb_security_group_id]
+}
