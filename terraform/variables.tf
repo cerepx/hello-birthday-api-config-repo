@@ -40,7 +40,7 @@ variable "name_prefix" {
   type        = string
 }
 
-
+# RDS config variables
 variable "engine" {
   description = "Database engine type"
   type        = string
@@ -64,5 +64,31 @@ variable "username" {
 
 variable "password" {
   description = "Master password for RDS"
+  type        = string
+}
+
+# ECS config variables
+variable "cluster_name" {
+  description = "ECS Cluster name"
+  type        = string
+}
+
+variable "service_name" {
+  description = "ECS Service name"
+  type        = string
+}
+
+variable "container_name" {
+  description = "ECS Container name inside the Task Definition"
+  type        = string
+}
+
+variable "container_image" {
+  description = "Container image URI for the ECS service"
+  type        = string
+}
+
+variable "gunicorn_workers" {
+  description = "Define GUNICORN_WORKERS environment variable"
   type        = string
 }

@@ -33,3 +33,13 @@ variable "flow_logs_retention_days" {
   type        = number
   default     = 30
 }
+
+output "alb_security_group_id" {
+  description = "Security Group ID for ALB"
+  value       = aws_security_group.alb.id
+}
+
+variable "aws_region" {
+  description = "AWS region for VPC endpoints (example: eu-west-1)"
+  type        = string
+}

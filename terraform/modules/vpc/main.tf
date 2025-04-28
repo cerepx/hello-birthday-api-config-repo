@@ -177,3 +177,146 @@ resource "aws_security_group" "rds" {
     Environment = var.env
   }
 }
+
+resource "aws_security_group" "ecs" {
+  name        = "${var.name}-ecs-sg"
+  description = "Allow inbound HTTP from ALB"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "HTTP from ALB"
+    from_port   = 5050
+    to_port     = 5050
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.name}-ecs-sg"
+    Environment = var.env
+  }
+}
+
+resource "aws_security_group" "alb" {
+  name        = "${var.name}-alb-sg"
+  description = "Security group for the Application Load Balancer"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "Allow HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow HTTPS from anywhere"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.name}-alb-sg"
+    Environment = var.env
+  }
+}
+
+# VPC Endpoint Security Group (only for Interface endpoints)
+resource "aws_security_group" "vpc_endpoints" {
+  name        = "${var.name}-vpc-endpoints-sg"
+  description = "Security group for VPC Interface Endpoints"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "Allow HTTPS (443) from VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.name}-vpc-endpoints-sg"
+    Environment = var.env
+  }
+}
+
+# Interface Endpoint for ECR API
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id             = aws_vpc.this.id
+  service_name       = "com.amazonaws.${var.aws_region}.ecr.api"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = aws_subnet.private[*].id
+  security_group_ids = [aws_security_group.vpc_endpoints.id]
+
+  private_dns_enabled = true
+
+  tags = {
+    Name = "${var.name}-ecr-api-endpoint"
+  }
+}
+
+# Interface Endpoint for ECR DKR
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  vpc_id             = aws_vpc.this.id
+  service_name       = "com.amazonaws.${var.aws_region}.ecr.dkr"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = aws_subnet.private[*].id
+  security_group_ids = [aws_security_group.vpc_endpoints.id]
+
+  private_dns_enabled = true
+
+  tags = {
+    Name = "${var.name}-ecr-dkr-endpoint"
+  }
+}
+
+# Gateway Endpoint for S3
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.this.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.private.id]
+
+  tags = {
+    Name = "${var.name}-s3-endpoint"
+  }
+}
+
+resource "aws_vpc_endpoint" "cloudwatch_logs" {
+  vpc_id              = aws_vpc.this.id
+  service_name        = "com.amazonaws.${var.aws_region}.logs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  private_dns_enabled = true
+
+  tags = {
+    Name = "${var.name}-cw-endpoint"
+  }
+}

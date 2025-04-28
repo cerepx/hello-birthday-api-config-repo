@@ -14,6 +14,8 @@ permissions:
 jobs:
   terraform-plan:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
     steps:
       - name: Checkout
@@ -29,6 +31,11 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.11.0"
+
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
 
       - name: Install TFLint
         run: |
@@ -57,6 +64,36 @@ jobs:
 
         working-directory: terraform
 
+      - name: Parse image name and tag from dependencies.yml
+        id: parse_image
+        run: |
+          # Extract full image string
+          FULL_IMAGE=$(yq e '.["hello-birthday-api"].image' dependencies.yml)
+
+          # Split into IMAGE (repo) and TAG (version)
+          FULL_REPO=$(echo $FULL_IMAGE | cut -d':' -f1)
+          IMAGE_TAG=$(echo $FULL_IMAGE | cut -d':' -f2)
+          IMAGE_NAME=$(basename $FULL_REPO)
+
+          echo "FULL_IMAGE=$FULL_IMAGE" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Pull image from GHCR
+        run: |
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+          docker pull ${{ env.FULL_IMAGE }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push image to ECR
+        run: |
+          docker tag ${{ env.FULL_IMAGE }} ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          echo "ECR_IMAGE=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
+
       - name: Terraform Init
         run: |
           if [[ "${{ github.base_ref }}" == "main" ]]; then
@@ -81,13 +118,15 @@ jobs:
           tflint --call-module-type=all
 
       - name: Run tfsec for DEV (Security Checks) #disabled some tfsec tests for DEV
-        run: tfsec --config-file terraform/envs/dev/.tfsec.yaml terraform/envs/dev/
+        run: tfsec --config-file terraform/envs/dev/.tfsec.yaml terraform/
 
       - name: Run tfsec for Prod
-        run: tfsec terraform/envs/dev/
+        run: tfsec terraform/
 
       - name: Terraform Plan
         id: plan
+        env:
+          TF_VAR_container_image: ${{ env.ECR_IMAGE }}
         run: |
           if [[ "${{ github.base_ref }}" == "main" ]]; then
             terraform plan -no-color -var-file=dev/dev.tfvars.json -out=tfplan | tee plan.txt
