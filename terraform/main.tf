@@ -53,6 +53,7 @@ module "ecs_service" {
   container_image  = var.container_image
   app_db_user      = var.username
   app_db_password  = var.password
+  app_db_name      = var.database_name
   gunicorn_workers = var.gunicorn_workers
   rds_db_endpoint  = module.rds.db_endpoint
   cpu              = 256
@@ -68,7 +69,7 @@ module "api_gateway" {
 
   api_name               = var.api_name
   vpc_link_name          = var.vpc_link_name
-  alb_dns_name           = "http://${module.alb.alb_dns_name}"
+  alb_listener_arn       = module.alb.listener_arn
   subnet_ids             = module.vpc.private_subnet_ids
   alb_security_group_ids = [module.vpc.alb_security_group_id]
 }

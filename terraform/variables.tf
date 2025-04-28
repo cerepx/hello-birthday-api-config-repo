@@ -67,6 +67,11 @@ variable "password" {
   type        = string
 }
 
+variable "database_name" {
+  description = "Database name for RDS"
+  type        = string
+}
+
 # ECS config variables
 variable "cluster_name" {
   description = "ECS Cluster name"

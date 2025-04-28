@@ -8,8 +8,8 @@ variable "vpc_link_name" {
   type        = string
 }
 
-variable "alb_dns_name" {
-  description = "DNS name of the existing ALB (HTTP protocol prefixed, e.g., http://my-alb.example.com)"
+variable "alb_listener_arn" {
+  description = "ARN of the existing ALB Listener"
   type        = string
 }
 

@@ -13,7 +13,7 @@ resource "aws_apigatewayv2_integration" "alb_integration" {
   api_id                 = aws_apigatewayv2_api.api.id
   integration_type       = "HTTP_PROXY"
   integration_method     = "ANY"
-  integration_uri        = var.alb_dns_name
+  integration_uri        = var.alb_listener_arn
   connection_type        = "VPC_LINK"
   connection_id          = aws_apigatewayv2_vpc_link.api_vpc_link.id
   payload_format_version = "1.0"
