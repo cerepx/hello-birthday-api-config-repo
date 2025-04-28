@@ -76,6 +76,11 @@ variable "app_db_password" {
   type        = string
 }
 
+variable "app_db_name" {
+  description = "The database password for the application"
+  type        = string
+}
+
 variable "gunicorn_workers" {
   description = "Define GUNICORN_WORKERS environment variable"
   type        = string

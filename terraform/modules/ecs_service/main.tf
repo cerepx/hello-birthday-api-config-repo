@@ -21,7 +21,7 @@ resource "aws_ecs_task_definition" "this" {
       environment = [
         {
           name  = "MYSQL_HOST"
-          value = var.rds_db_endpoint
+          value = split(":", var.rds_db_endpoint)[0]
         },
         {
           name  = "MYSQL_USER"
@@ -30,6 +30,10 @@ resource "aws_ecs_task_definition" "this" {
         {
           name  = "MYSQL_PASSWORD"
           value = var.app_db_password
+        },
+        {
+          name  = "MYSQL_DATABASE"
+          value = var.app_db_name
         },
         {
           name  = "GUNICORN_WORKERS"
