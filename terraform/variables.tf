@@ -66,3 +66,24 @@ variable "password" {
   description = "Master password for RDS"
   type        = string
 }
+
+# ECS config variables (✅ Now properly added)
+variable "cluster_name" {
+  description = "ECS Cluster name"
+  type        = string
+}
+
+variable "service_name" {
+  description = "ECS Service name"
+  type        = string
+}
+
+variable "container_name" {
+  description = "ECS Container name inside the Task Definition"
+  type        = string
+}
+
+variable "container_image" {
+  description = "Container image URI for the ECS service"
+  type        = string
+}

@@ -20,7 +20,7 @@ availability_zones = [
 
 name_prefix             = "hello-birthday-dev"
 engine                 = "mysql"
-instance_class         = "db.t3.medium"
+instance_class         = "db.t3.micro"
 allocated_storage      = 20
 username               = "username"
 password               = "password"
