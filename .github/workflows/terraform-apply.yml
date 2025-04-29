@@ -40,14 +40,14 @@ jobs:
             echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
 
       - name: Terraform Init
+        id: init
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
-          if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
-            terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
-          elif [[ ${{ github.ref }} == "refs/heads/release" ]]; then
-            terraform init -backend-config=../infrastructure/backends/backend-$ENVIRONMENT.hcl
+          if [ "${ENVIRONMENT}" = "dev" ]; then
+            terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
           else
-            echo "Unsupported branch for apply"
-            exit 1
+            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
           fi
         working-directory: terraform
 
