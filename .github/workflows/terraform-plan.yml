@@ -144,8 +144,9 @@ jobs:
           aws s3 cp terraform/tfplan s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/${{ github.sha }}.tfplan
           aws s3 cp plan-filename.txt s3://hello-birthday-api-tfstate/tfplans/$ENVIRONMENT/plan-filename.txt
 
-      - name: Comment Terraform Plan on PR
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: terraform-plan
-          path: terraform/plan.txt
+      # This is disabled because the repo is public and we don't want to expose the plan that contains ARNs and other sensitive data
+      # - name: Comment Terraform Plan on PR
+      #   uses: marocchino/sticky-pull-request-comment@v2
+      #   with:
+      #     header: terraform-plan
+      #     path: terraform/plan.txt
