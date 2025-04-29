@@ -1,0 +1,21 @@
+# Labeler rules for auto-tagging PRs
+
+feat:
+  - '.github/workflows/**'
+  - 'terraform/modules/**'
+
+infra:
+  - 'terraform/**'
+
+ci:
+  - '.github/workflows/**'
+
+rds:
+  - 'terraform/modules/rds/**'
+
+alb:
+  - 'terraform/modules/alb/**'
+
+ecs:
+  - 'terraform/modules/ecs_cluster/**'
+  - 'terraform/modules/ecs_service/**'
