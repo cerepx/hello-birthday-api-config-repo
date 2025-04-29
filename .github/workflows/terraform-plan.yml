@@ -117,11 +117,8 @@ jobs:
           tflint --init
           tflint --call-module-type=all
 
-      #- name: Run tfsec for DEV (Security Checks) #disabled some tfsec tests for DEV
-      #run: tfsec --config-file terraform/envs/dev/.tfsec.yaml terraform/
-
-      #- name: Run tfsec for Prod
-      #  run: tfsec terraform/
+      - name: Run tfsec (Security Checks) #disabled some tfsec tests for testing purposes
+        run: tfsec --config-file terraform/envs/.tfsec.yaml terraform/
 
       - name: Terraform Plan
         id: plan

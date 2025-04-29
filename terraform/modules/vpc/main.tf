@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -132,7 +134,7 @@ resource "aws_iam_role_policy" "flow_logs_policy" {
         "logs:DescribeLogGroups",
         "logs:DescribeLogStreams"
       ],
-      "Resource" : "*"
+      "Resource" : "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/vpc/flow-logs-*"
     }]
   })
 }
@@ -192,6 +194,7 @@ resource "aws_security_group" "ecs" {
   }
 
   egress {
+    description = "Allow all outbound traffic from ECS tasks (pull images)"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -214,15 +217,7 @@ resource "aws_security_group" "alb" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow HTTPS from anywhere"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   egress {
@@ -230,7 +225,7 @@ resource "aws_security_group" "alb" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
@@ -254,10 +249,11 @@ resource "aws_security_group" "vpc_endpoints" {
   }
 
   egress {
+    description = "Allow all outbound traffic to VPC CIDR for VPC Endpoints"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {

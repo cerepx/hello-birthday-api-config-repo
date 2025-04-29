@@ -4,6 +4,8 @@ resource "aws_lb" "this" {
   load_balancer_type = "application"
   security_groups    = var.security_groups
   subnets            = var.subnets
+
+  drop_invalid_header_fields = true
 }
 
 resource "aws_lb_target_group" "this" {
