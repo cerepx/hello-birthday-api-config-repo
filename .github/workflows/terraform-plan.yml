@@ -106,6 +106,18 @@ jobs:
           fi
         working-directory: terraform
 
+      - name: Terraform Init
+        id: init
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+        run: |
+          if [ "${ENVIRONMENT}" = "dev" ]; then
+            terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
+          else
+            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
+          fi
+        working-directory: terraform
+
       - name: Terraform Fmt
         run: terraform fmt -check -recursive
 
@@ -125,9 +137,9 @@ jobs:
         env:
           TF_VAR_container_image: ${{ env.ECR_IMAGE }}
         run: |
-          if [[ "${{ github.base_ref }}" == "main" ]]; then
+          if [ "${ENVIRONMENT}" = "dev" ]; then
             terraform plan -no-color -var-file=dev/dev.tfvars.json -out=tfplan | tee plan.txt
-          elif [[ ${{ github.base_ref }} == "release" ]]; then
+          else
             terraform plan -var-file=prod/prod.tfvars.json -out=tfplan | tee plan.txt
           fi
         working-directory: terraform
