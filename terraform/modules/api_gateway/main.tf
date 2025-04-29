@@ -29,4 +29,22 @@ resource "aws_apigatewayv2_stage" "default_stage" {
   api_id      = aws_apigatewayv2_api.api.id
   name        = "$default"
   auto_deploy = true
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
+
+    format = jsonencode({
+      requestId               = "$context.requestId"
+      requestTime             = "$context.requestTime"
+      httpMethod              = "$context.httpMethod"
+      path                    = "$context.path"
+      status                  = "$context.status"
+      responseLength          = "$context.responseLength"
+      integrationErrorMessage = "$context.integrationErrorMessage"
+    })
+  }
+}
+
+resource "aws_cloudwatch_log_group" "api_gateway_logs" {
+  name              = "/aws/apigateway/${var.api_name}-access-logs"
+  retention_in_days = 30
 }

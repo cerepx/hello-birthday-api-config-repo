@@ -1,9 +1,0 @@
-exclude:
-  # RDS - Performance Insights
-  - aws-rds-enable-performance-insights  # Instance does not have performance insights enabled
-  - aws-rds-enable-performance-insights-kms-key  # No key specified for performance insights encryption
-  - aws-rds-enable-deletion-protection # RDS instances should have deletion protection enabled
-
-
-  # CloudWatch Log Group - Encryption
-  - aws-cloudwatch-log-group-customer-key  # Log group is not encrypted
