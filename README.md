@@ -56,7 +56,7 @@ This repo defines reusable modules for:
 | `release`   | PR created    | terraform-plan.yml     | Terraform Plan (Prod)       |
 | `release`   | PR merged     | terraform-apply.yml    | Terraform Apply (Prod)      |
 
-> ⚠️ All Terraform plans and applies are environment-scoped and automated via GitHub Actions.
+> 🚧 Each environment (Dev & Prod) runs its own Terraform Plan and Apply — fully automated via GitHub Actions.
 
 ---
 
@@ -112,17 +112,17 @@ This project is licensed under the MIT License.
 
 ---
 
-## 🙌 Contributing
+## 🧠 Notes for Contributors
 
-- Fork the repo.
-- Create a feature branch: git checkout -b feature/my-feature.
-- Commit your changes.
-- Push to your branch.
-- Open a Pull Request.
-- Branch rules:
-- main is used for deploying to Dev.
-- release is used for deploying to Prod.
-- All changes go through PR-based pipelines.
+- 🛠 All changes must go through **Pull Requests** — no direct commits to `main` or `release`.
+- 🌱 Follow the branch naming convention:
+  - `feature/*` – for new features
+  - `bugfix/*` – for fixing bugs
+  - `hotfix/*` – for production-level urgent changes
+- 🔒 The `main` and `release` branches are protected and managed through CI pipelines:
+  - `main` → triggers **Dev** plan/apply
+  - `release` → triggers **Prod** plan/apply
+- 🔁 Each PR triggers the appropriate **Terraform Plan**; merges trigger **Apply**.
 
 ---
 
