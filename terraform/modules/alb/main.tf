@@ -1,6 +1,6 @@
 resource "aws_lb" "this" {
   name               = "hello-birthday-api-alb"
-  internal           = false
+  internal           = true
   load_balancer_type = "application"
   security_groups    = var.security_groups
   subnets            = var.subnets
