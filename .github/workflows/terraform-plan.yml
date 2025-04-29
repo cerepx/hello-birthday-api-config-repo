@@ -95,14 +95,14 @@ jobs:
           echo "ECR_IMAGE=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
 
       - name: Terraform Init
+        id: init
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
-          if [[ "${{ github.base_ref }}" == "main" ]]; then
+          if [ "${ENVIRONMENT}" = "dev" ]; then
             terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
-          elif [[ "${{ github.base_ref }}" == "release" ]]; then
-            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
           else
-            echo "Unsupported target branch for plan"
-            exit 1
+            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
           fi
         working-directory: terraform
 
@@ -117,20 +117,17 @@ jobs:
           tflint --init
           tflint --call-module-type=all
 
-      #- name: Run tfsec for DEV (Security Checks) #disabled some tfsec tests for DEV
-      #run: tfsec --config-file terraform/envs/dev/.tfsec.yaml terraform/
+      - name: Run tfsec (Security Checks) #disabled some tfsec tests for testing purposes
+        run: tfsec --config-file terraform/envs/.tfsec.yaml terraform/
 
-      #- name: Run tfsec for Prod
-      #  run: tfsec terraform/
-
-      - name: Terraform Plan
+      - name: Terraform Init
         id: plan
         env:
           TF_VAR_container_image: ${{ env.ECR_IMAGE }}
         run: |
-          if [[ "${{ github.base_ref }}" == "main" ]]; then
+          if [ "${ENVIRONMENT}" = "dev" ]; then
             terraform plan -no-color -var-file=dev/dev.tfvars.json -out=tfplan | tee plan.txt
-          elif [[ ${{ github.base_ref }} == "release" ]]; then
+          else
             terraform plan -var-file=prod/prod.tfvars.json -out=tfplan | tee plan.txt
           fi
         working-directory: terraform
