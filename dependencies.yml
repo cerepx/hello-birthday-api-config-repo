@@ -1,2 +1,2 @@
 hello-birthday-api:
-  image: ghcr.io/cerepx/hello-birthday-api:1.0.38
+  image: ghcr.io/cerepx/hello-birthday-api:1.0.40
