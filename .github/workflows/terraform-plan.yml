@@ -93,19 +93,6 @@ jobs:
           docker tag ${{ env.FULL_IMAGE }} ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           echo "ECR_IMAGE=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
-
-      - name: Terraform Init
-        run: |
-          if [[ "${{ github.base_ref }}" == "main" ]]; then
-            terraform init -backend-config=../infrastructure/backends/backend-dev.hcl
-          elif [[ "${{ github.base_ref }}" == "release" ]]; then
-            terraform init -backend-config=../infrastructure/backends/backend-prod.hcl
-          else
-            echo "Unsupported target branch for plan"
-            exit 1
-          fi
-        working-directory: terraform
-
       - name: Terraform Init
         id: init
         env:
