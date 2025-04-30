@@ -107,11 +107,6 @@ LICENSE
 
 ---
 
-## 📜 License
-This project is licensed under the MIT License.
-
----
-
 ## 🧠 Notes for Contributors
 
 - 🛠 All changes must go through **Pull Requests** — no direct commits to `main` or `release`.
@@ -134,3 +129,14 @@ This project is licensed under the MIT License.
 - [GitHub Actions](https://github.com/features/actions) — CI/CD automation for planning and applying infrastructure.
 - [AWS](https://aws.amazon.com/) — cloud platform hosting the full application stack.
 - [GitHub Packages](https://docs.github.com/en/packages) — container registry where Docker images are published and consumed.
+
+---
+
+## 🏗️ Architecture Diagram
+
+![Architecture Diagram](docs/architecture/cicd-hello-birthday-api.svg)
+
+---
+
+## 📜 License
+This project is licensed under the MIT License.
