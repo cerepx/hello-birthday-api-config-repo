@@ -52,7 +52,7 @@ jobs:
           # Default
           ENVIRONMENT="dev"
 
-          if [[ "${GITHUB_HEAD_REF}" == "release" || "${GITHUB_REF}" == "refs/heads/release" ]]; then
+          if [[ "${GITHUB_BASE_REF}" == "release" || "${GITHUB_REF}" == "refs/heads/release" ]]; then
             ENVIRONMENT="prod"
           fi
           echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
